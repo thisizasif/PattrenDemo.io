@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Pattern Lock Demo | Try Pattern by ANM</title>
+  <meta name="description" content="Try this online pattern lock demo – draw your unlock pattern using a responsive SVG grid. Built with JavaScript by ANM." />
+  <meta name="keywords" content="online pattern try, pattern lock demo, pattern unlock, draw pattern online, svg lock, JavaScript pattern lock, ANM" />
+  <meta name="author" content="ANM" />
+  <meta property="og:title" content="Try Pattern Lock Online - By ANM" />
+  <meta property="og:description" content="Draw your unlock pattern in this online SVG-based lock demo. Responsive, fast, and fun!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://yourdomain.com/preview-image.png" />
+  <meta property="og:url" content="https://yourgithubusername.github.io/your-repo-name/" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #000;
+      color: #00ff00;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      text-align: center;
+    }
+    svg {
+      width: 90vmin;
+      height: 90vmin;
+    }
+    circle {
+      fill: #ccc;
+      stroke: #999;
+      stroke-width: 2;
+    }
+    .active {
+      fill: #00ff00;
+    }
+    line {
+      stroke: #00ff00;
+      stroke-width: 4;
+    }
+  </style>
+</head>
+<body>
+  <h1>Made with Love by ANM</h1>
+  <svg id="pattern-lock" viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet"></svg>
+
+  <script>
+    const svg = document.getElementById('pattern-lock');
+    const radius = 20;
+    const gridSize = 3;
+    const size = 300;
+    const spacing = size / (gridSize + 1);
+    const dots = [];
+    const selected = [];
+    const lines = [];
+
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
+        const cx = (col + 1) * spacing;
+        const cy = (row + 1) * spacing;
+        const id = row * gridSize + col + 1;
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", cx);
+        circle.setAttribute("cy", cy);
+        circle.setAttribute("r", radius);
+        circle.setAttribute("data-id", id);
+
+        svg.appendChild(circle);
+        dots.push(circle);
+      }
+    }
+
+    let isDrawing = false;
+    let lastX, lastY;
+
+    function startDraw(e) {
+      const dot = getDotFromEvent(e);
+      if (dot) {
+        isDrawing = true;
+        selectDot(dot);
+      }
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const dot = getDotFromEvent(e);
+      if (dot && !selected.includes(dot)) {
+        drawLine(dot);
+        selectDot(dot);
+      }
+    }
+
+    function endDraw() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const pattern = selected.map(dot => dot.getAttribute("data-id")).join('-');
+      console.log("Pattern: " + pattern);
+      reset();
+    }
+
+    function getDotFromEvent(e) {
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return dots.find(dot => {
+        const dx = loc.x - dot.getAttribute("cx");
+        const dy = loc.y - dot.getAttribute("cy");
+        return Math.sqrt(dx * dx + dy * dy) < radius;
+      });
+    }
+
+    function selectDot(dot) {
+      dot.classList.add("active");
+      selected.push(dot);
+      lastX = +dot.getAttribute("cx");
+      lastY = +dot.getAttribute("cy");
+    }
+
+    function drawLine(dot) {
+      const x = +dot.getAttribute("cx");
+      const y = +dot.getAttribute("cy");
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", lastX);
+      line.setAttribute("y1", lastY);
+      line.setAttribute("x2", x);
+      line.setAttribute("y2", y);
+      svg.appendChild(line);
+      lines.push(line);
+    }
+
+    function reset() {
+      selected.forEach(dot => dot.classList.remove("active"));
+      lines.forEach(line => svg.removeChild(line));
+      selected.length = 0;
+      lines.length = 0;
+    }
+
+    svg.addEventListener("mousedown", startDraw);
+    svg.addEventListener("mousemove", draw);
+    window.addEventListener("mouseup", endDraw);
+    svg.addEventListener("touchstart", e => startDraw(e.touches[0]));
+    svg.addEventListener("touchmove", e => draw(e.touches[0]));
+    window.addEventListener("touchend", endDraw);
+  </script>
+</body>
+</html>
